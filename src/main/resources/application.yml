@@ -1,0 +1,59 @@
+
+mybatis:
+  type-aliases-package: com.freesun.shardingsphere.multitenancy.model
+  type-handlers-package: com.freesun.shardingsphere.multitenancy.dao
+  mapper-locations: classpath*:com/freesun/shardingsphere/multitenancy/dao/*.xml
+
+spring:
+  shardingsphere:
+    mode:
+      type: Memory
+    schema:
+      name: multit-tenant
+    datasource:
+      names: aliyun,tmall,taobao
+      aliyun:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/aliyun?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: 123456
+      taobao:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/taobao?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: 123456
+      tmall:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/tmall?serverTimezone=UTC&useSSL=false&useUnicode=true&characterEncoding=UTF-8
+        username: root
+        password: 123456
+    rules:
+      sharding:
+        tables:
+          t_order:
+            actualDataNodes: tmall.tb_order,taobao.tb_order,aliyun.tb_order
+            keyGenerateStrategy:
+              column: order_id
+              keyGeneratorName: snowflake
+        defaultDatabaseStrategy:
+          standard:
+            shardingColumn: merchant
+            shardingAlgorithmName: db-classbased
+        defaultTableStrategy:
+          none:
+
+        shardingAlgorithms:
+          db-classbased:
+            type: CLASS_BASED
+            props:
+              strategy: standard
+              algorithmClassName: com.freesun.shardingsphere.multitenancy.spi.DbShardingAlgorithm
+
+        keyGenerators:
+          snowflake:
+            type: SNOWFLAKE
+            props:
+              worker-id: 123
